@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-commerce Prediction Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: white;
+            background: #1e3a8a;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .hero-section {
+            position: relative;
+            padding: 5rem 0 8rem 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 30% 20%, rgba(120,119,198,0.1), transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(14,165,233,0.1), transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 3rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+        }
+
+        .title-gradient {
+            display: block;
+            background: linear-gradient(90deg, #7c3aed 0%, #8b5cf6 50%, #0ea5e9 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .description {
+            font-size: 1.125rem;
+            color: #e5e7eb;
+            max-width: 48rem;
+            margin: 0 auto 3rem auto;
+            line-height: 1.7;
+        }
+
+        .search-container {
+            max-width: 32rem;
+            margin: 0 auto;
+        }
+
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .search-input {
+            width: 100%;
+            height: 3.5rem;
+            padding: 0 6rem 0 3rem;
+            font-size: 1rem;
+            border: 2px solid #475569;
+            border-radius: 0.75rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+            background: #334155;
+            color: white;
+        }
+
+        .search-input:focus {
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.3);
+        }
+
+        .search-input::placeholder {
+            color: #cbd5e1;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1.25rem;
+            height: 1.25rem;
+            color: #cbd5e1;
+        }
+
+        .predict-btn {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 2.5rem;
+            padding: 0 1.5rem;
+            background: #7c3aed;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .predict-btn:hover:not(:disabled) {
+            background: #6d28d9;
+        }
+
+        .predict-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .loading-spinner {
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid #ffffff40;
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .example-queries {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .example-btn {
+            padding: 0.5rem 1rem;
+            background: #334155;
+            border: 1px solid #475569;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .example-btn:hover {
+            background: #475569;
+            border-color: #64748b;
+        }
+
+        .prediction-result {
+            max-width: 48rem;
+            margin: 3rem auto 0 auto;
+            background: rgba(51, 65, 85, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .prediction-result.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result-header {
+            padding: 1.5rem 1.5rem 1rem 1.5rem;
+            text-align: center;
+        }
+
+        .result-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(124, 58, 237, 0.1);
+            color: #7c3aed;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white;
+            margin: 0;
+        }
+
+        .result-content {
+            padding: 0 1.5rem 1.5rem 1.5rem;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-metric {
+            padding: 1rem;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: #cbd5e1;
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .confidence { color: #059669; }
+        .timeframe { color: #2563eb; }
+        .status { color: #7c3aed; }
+
+        .result-insight {
+            padding: 1rem;
+            background: #1e293b;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+
+        .result-insight strong {
+            color: white;
+        }
+
+        .sparkles-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        .clock-icon {
+            width: 1rem;
+            height: 1rem;
+            margin-right: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2rem;
+            }
+            
+            .hero-section {
+                padding: 3rem 0 5rem 0;
+            }
+            
+            .search-input {
+                padding-right: 5rem;
+            }
+            
+            .predict-btn {
+                padding: 0 1rem;
+            }
+            
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <section class="hero-section">
+            <div class="hero-content">
+                <h1 class="title">
+                    E-commerce
+                    <span class="title-gradient">Prediction Tool</span>
+                </h1>
+                
+                <p class="description">
+                    Get instant predictions for your e-commerce business. Ask any question about sales, inventory, 
+                    customers, pricing, or market trends.
+                </p>
+                
+                <div class="search-container">
+                    <div class="search-wrapper">
+                        <input 
+                            type="text" 
+                            class="search-input" 
+                            id="searchInput"
+                            placeholder="What e-commerce prediction do you need? (e.g., sales forecast, inventory optimization)"
+                        >
+                        <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <button class="predict-btn" id="predictBtn">
+                            <span id="btnText">Predict</span>
+                            <div class="loading-spinner" id="loadingSpinner" style="display: none;"></div>
+                        </button>
+                    </div>
+                    
+                    <div class="example-queries">
+                        <button class="example-btn" data-query="What will my sales be next month?">What will my sales be next month?</button>
+                        <button class="example-btn" data-query="When should I restock inventory?">When should I restock inventory?</button>
+                        <button class="example-btn" data-query="What's the optimal price for my product?">What's the optimal price for my product?</button>
+                        <button class="example-btn" data-query="How are market trends looking?">How are market trends looking?</button>
+                    </div>
+                </div>
+
+                <div class="prediction-result" id="predictionResult">
+                    <div class="result-header">
+                        <div class="result-badge">
+                            <svg class="sparkles-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l7 7-7 7M13 3l7 7-7 7"></path>
+                            </svg>
+                            Prediction Result
+                        </div>
+                        <h2 class="result-title" id="predictionValue"></h2>
+                    </div>
+                    <div class="result-content">
+                        <div class="result-grid">
+                            <div class="result-metric">
+                                <div class="metric-label">Confidence</div>
+                                <div class="metric-value confidence" id="confidenceValue"></div>
+                            </div>
+                            <div class="result-metric">
+                                <div class="metric-label">Timeframe</div>
+                                <div class="metric-value timeframe" id="timeframeValue"></div>
+                            </div>
+                            <div class="result-metric">
+                                <div class="metric-label">Status</div>
+                                <div class="metric-value status">
+                                    <svg class="clock-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12,6 12,12 16,14"></polyline>
+                                    </svg>
+                                    Live
+                                </div>
+                            </div>
+                        </div>
+                        <div class="result-insight">
+                            <strong>Insight:</strong> <span id="insightValue"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Simple prediction generator based on input
+        function generatePrediction(input) {
+            const lowerInput = input.toLowerCase();
+
+            // Handle currency conversion
+            if ((lowerInput.includes('convert') || lowerInput.includes('exchange')) &&
+                (lowerInput.includes('dollar') || lowerInput.includes('usd') || lowerInput.includes('$')) &&
+                (lowerInput.includes('rupee') || lowerInput.includes('inr') || lowerInput.includes('₹'))) {
+
+                // Extract number if present, default to 1
+                const numberMatch = lowerInput.match(/(\d+(?:\.\d+)?)/);
+                const amount = numberMatch ? parseFloat(numberMatch[1]) : 1;
+                const convertedAmount = (amount * 83.12).toFixed(2); // Current USD to INR rate
+
+                return {
+                    prediction: `₹${convertedAmount}`,
+                    confidence: '100%',
+                    timeframe: 'Current rate',
+                    insight: `${amount} USD = ₹${convertedAmount} at today's exchange rate (1 USD = ₹83.12)`
+                };
+            } else if (lowerInput.includes('sales') || lowerInput.includes('revenue')) {
+                return {
+                    prediction: '+18.5% increase',
+                    confidence: '92%',
+                    timeframe: 'Next 30 days',
+                    insight: 'Peak season approaching with strong market indicators'
+                };
+            } else if (lowerInput.includes('inventory') || lowerInput.includes('stock')) {
+                return {
+                    prediction: 'Restock in 12 days',
+                    confidence: '89%',
+                    timeframe: 'Next 2 weeks',
+                    insight: 'Current demand exceeds supply by 15%'
+                };
+            } else if (lowerInput.includes('customer') || lowerInput.includes('users')) {
+                return {
+                    prediction: '2.3x lifetime value',
+                    confidence: '85%',
+                    timeframe: 'Next 6 months',
+                    insight: 'High engagement segment showing retention patterns'
+                };
+            } else if (lowerInput.includes('price') || lowerInput.includes('pricing')) {
+                return {
+                    prediction: 'Optimal at ₹3,999',
+                    confidence: '94%',
+                    timeframe: 'Current market',
+                    insight: 'Price elasticity suggests 8% room for increase'
+                };
+            } else if (lowerInput.includes('trend') || lowerInput.includes('market')) {
+                return {
+                    prediction: 'Rising 23% monthly',
+                    confidence: '88%',
+                    timeframe: 'Next quarter',
+                    insight: 'Market momentum building with seasonal factors'
+                };
+            } else {
+                return {
+                    prediction: '+15.2% growth',
+                    confidence: '87%',
+                    timeframe: 'Next 30 days',
+                    insight: 'Multiple positive indicators detected'
+                };
+            }
+        }
+
+        // DOM elements
+        const searchInput = document.getElementById('searchInput');
+        const predictBtn = document.getElementById('predictBtn');
+        const btnText = document.getElementById('btnText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const predictionResult = document.getElementById('predictionResult');
+        const predictionValue = document.getElementById('predictionValue');
+        const confidenceValue = document.getElementById('confidenceValue');
+        const timeframeValue = document.getElementById('timeframeValue');
+        const insightValue = document.getElementById('insightValue');
+
+        // Handle prediction
+        function handlePredict() {
+            const query = searchInput.value.trim();
+            if (!query) return;
+
+            // Show loading state
+            predictBtn.disabled = true;
+            btnText.style.display = 'none';
+            loadingSpinner.style.display = 'block';
+
+            // Simulate API call delay
+            setTimeout(() => {
+                const result = generatePrediction(query);
+                
+                // Update result content
+                predictionValue.textContent = result.prediction;
+                confidenceValue.textContent = result.confidence;
+                timeframeValue.textContent = result.timeframe;
+                insightValue.textContent = result.insight;
+                
+                // Show result
+                predictionResult.classList.add('show');
+                
+                // Reset button state
+                predictBtn.disabled = false;
+                btnText.style.display = 'block';
+                loadingSpinner.style.display = 'none';
+            }, 1500);
+        }
+
+        // Event listeners
+        predictBtn.addEventListener('click', handlePredict);
+
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handlePredict();
+            }
+        });
+
+        // Example query buttons
+        document.querySelectorAll('.example-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                searchInput.value = btn.dataset.query;
+            });
+        });
+
+        // Update button state based on input
+        searchInput.addEventListener('input', () => {
+            predictBtn.disabled = !searchInput.value.trim();
+        });
+
+        // Initial state
+        predictBtn.disabled = true;
+    </script>
+</body>
+</html>
